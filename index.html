@@ -437,6 +437,7 @@
   }
 
   /* RESPONSIVE */
+  .pax-mobile { display: none; }
   @media (max-width: 620px) {
     html, body { overflow-x: hidden; max-width: 100vw; }
     header {
@@ -446,8 +447,27 @@
     }
     .header-subtitle { display: none; }
     .logo-img { height: 34px; }
-    #pill-agencias { display: none !important; }
-    .header-stats { display: flex; gap: 8px; }
+    .header-stats { display: none !important; }
+    .pax-mobile {
+      display: flex !important;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 0.9rem;
+      color: #C8B89A;
+      width: 100%;
+      box-sizing: border-box;
+      order: -2;
+    }
+    .pax-mobile strong {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: var(--terracota);
+      margin: 0 2px;
+    }
     #lock-btn { display: none !important; }
     .header-right { gap: 8px; }
     .clock-time { font-size: 1rem; }
@@ -495,6 +515,10 @@
 
 <main>
   <div class="toolbar">
+    <div class="pax-mobile" id="pax-mobile">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="6" r="2.2" stroke="currentColor" stroke-width="1.4"/><path d="M1 14c0-2.2 2.5-4 6-4s6 1.8 6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong id="total-pax-mobile">0</strong> pax hoy
+    </div>
     <button class="lock-btn lock-btn-mobile" id="lock-btn-mobile" onclick="toggleLock()" style="display:none">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <span> Bloqueado</span>
@@ -775,6 +799,7 @@ function render() {
 
   const totPax = reservas.reduce((s,r) => s + paxTotal(r), 0);
   document.getElementById('total-pax').textContent = totPax;
+  const pmob = document.getElementById('total-pax-mobile'); if(pmob) pmob.textContent = totPax;
   document.getElementById('total-reservas').textContent = reservas.length;
 
   grid.innerHTML = '';
