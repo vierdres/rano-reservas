@@ -230,6 +230,24 @@
   .pago-badge { display: inline-flex; align-items: center; border-radius: 3px; padding: 2px 7px; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em; margin-top: 5px; }
   .pago-badge.incluido { background: rgba(74,124,89,0.22); color: #7DC896; }
   .pago-badge.directo  { background: rgba(91,141,184,0.22); color: #8EC4E8; }
+
+  /* ESTADO BADGES */
+  .estado-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: none; border-radius: 20px; padding: 4px 11px;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+    cursor: pointer; transition: all 0.18s; font-family: 'Inter', sans-serif;
+    text-transform: uppercase; flex-shrink: 0;
+  }
+  .estado-btn.pendiente  { background: rgba(200,60,60,0.18); color: #E06060; border: 1.5px solid #E06060; }
+  .estado-btn.en_mesa   { background: rgba(210,170,20,0.18); color: #C8A800; border: 1.5px solid #C8A800; }
+  .estado-btn.finalizado { background: rgba(74,124,89,0.18); color: #5AAA70; border: 1.5px solid #5AAA70; }
+  .estado-btn:hover { filter: brightness(1.15); }
+
+  .reserva-card.pendiente  { border-left: 4px solid #E06060; }
+  .reserva-card.en_mesa   { border-left: 4px solid #C8A800; }
+  .reserva-card.finalizado { border-left: 4px solid #5AAA70; opacity: 0.75; }
+
   .notas-line { font-size: 0.73rem; color: #A89070; font-style: italic; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); }
 
   /* MODAL */
@@ -614,6 +632,22 @@ function getOrdenadas() {
   return lista;
 }
 
+function estadoLabel(e) {
+  if (e === 'pendiente')  return '● Pendiente';
+  if (e === 'en_mesa')   return '● En mesa';
+  if (e === 'finalizado') return '● Finalizado';
+  return '● Pendiente';
+}
+
+function cambiarEstado(id) {
+  const res = reservas.find(r => r.id === id);
+  if (!res) return;
+  const ciclo = { pendiente: 'en_mesa', en_mesa: 'finalizado', finalizado: 'pendiente' };
+  res.estado = ciclo[res.estado || 'pendiente'];
+  guardarStorage();
+  render();
+}
+
 function render() {
   const grid  = document.getElementById('reservas-grid');
   const empty = document.getElementById('empty-msg');
@@ -645,7 +679,7 @@ function render() {
 
   lista.forEach((res, idx) => {
     const card = document.createElement('div');
-    card.className = 'reserva-card';
+    card.className = `reserva-card ${res.estado || 'pendiente'}`;
     card.dataset.id = res.id;
     card.draggable = ordenActual === 'manual';
 
@@ -690,6 +724,9 @@ function render() {
         <span class="card-num">${idx+1}</span>
         <div class="card-agency">${res.agencia}</div>
         ${res.hora ? `<span class="card-hora"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M6 3.5v2.75L7.75 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>${res.hora}</span>` : ''}
+        <button class="estado-btn ${res.estado||'pendiente'}" onclick="cambiarEstado('${res.id}')" title="Cambiar estado">
+          ${estadoLabel(res.estado||'pendiente')}
+        </button>
         <div class="card-actions">
           <button class="btn-icon" onclick="abrirModal('${res.id}')" title="Editar">
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 11.5V14h2.5l7-7L9 4.5l-7 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11.5 2.5l2 2-1 1-2-2 1-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -816,7 +853,7 @@ function guardarReserva() {
     reservas[i] = { ...reservas[i], agencia, hora, grupos };
     toast(`Reserva de ${agencia} actualizada.`, 'info');
   } else {
-    reservas.push({ id: Date.now().toString(), agencia, hora, grupos });
+    reservas.push({ id: Date.now().toString(), agencia, hora, grupos, estado: 'pendiente' });
     toast(`Reserva de ${agencia} registrada.`);
   }
 
