@@ -244,9 +244,9 @@
   .estado-btn.finalizado { background: rgba(74,124,89,0.18); color: #5AAA70; border: 1.5px solid #5AAA70; }
   .estado-btn:hover { filter: brightness(1.15); }
 
-  .reserva-card.pendiente  { border-left: 4px solid #E06060; background: linear-gradient(135deg, var(--piedra) 60%, rgba(224,96,96,0.10) 100%); }
-  .reserva-card.en_mesa   { border-left: 4px solid #C8A800; background: linear-gradient(135deg, var(--piedra) 60%, rgba(200,168,0,0.10) 100%); }
-  .reserva-card.finalizado { border-left: 4px solid #5AAA70; background: linear-gradient(135deg, var(--piedra) 60%, rgba(90,170,112,0.12) 100%); opacity: 0.85; }
+  .reserva-card.pendiente  { border-left: 4px solid #E06060; box-shadow: 0 3px 14px rgba(61,43,31,0.2), inset 0 0 80px rgba(224,96,96,0.09); }
+  .reserva-card.en_mesa   { border-left: 4px solid #C8A800; box-shadow: 0 3px 14px rgba(61,43,31,0.2), inset 0 0 80px rgba(200,168,0,0.09); }
+  .reserva-card.finalizado { border-left: 4px solid #5AAA70; box-shadow: 0 3px 14px rgba(61,43,31,0.2), inset 0 0 80px rgba(90,170,112,0.11); opacity: 0.85; }
 
   @keyframes statePulse {
     0%   { transform: scale(1); box-shadow: 0 3px 14px rgba(61,43,31,0.2); }
