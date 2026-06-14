@@ -918,13 +918,13 @@ function render() {
     });
 
     const gruposHtml = res.grupos.map(g => {
-      const cls = g.pago==='incluido' ? 'incluido' : 'directo';
+      const cls = g.pago==='incluido' ? 'incluido' : g.pago==='mix' ? 'mix' : 'directo';
       return `<div class="grupo-item ${cls}">
         <div class="grupo-row">
           <div class="grupo-info">
             ${g.guia   ? `<div class="info-line"><span class="label">Guía</span><span class="value">${g.guia}</span></div>` : ''}
             ${g.driver ? `<div class="info-line"><span class="label">Driver</span><span class="value">${g.driver}</span></div>` : ''}
-            <span class="pago-badge ${cls}">${g.pago==='incluido'?'INCLUIDO':'PAGO DIRECTO'}</span>
+            <span class="pago-badge ${cls}">${g.pago==='incluido'?'INCLUIDO':g.pago==='mix'?'MIX':'PAGO DIRECTO'}</span>
           </div>
           <div class="grupo-right">
             ${g.mesas ? `<span class="mesa-badge">Mesa ${g.mesas}</span>` : ''}
@@ -933,6 +933,7 @@ function render() {
           </div>
         </div>
         ${g.notas ? `<div class="notas-line">📝 ${g.notas}</div>` : ''}
+        ${(g.menus && g.menus.some(m=>m)) ? `<div class="menus-on-card">${g.menus.map((m,i)=>m?`<div class="menu-on-card-row"><span class="mpax">Pax ${i+1}</span><span class="mmenu">${m}</span></div>`:'').join('')}</div>` : ''}
       </div>`;
     }).join('');
 
@@ -1037,13 +1038,84 @@ function agregarGrupo(data = null) {
     <div class="form-group" style="margin-bottom:0">
       <label>Notas adicionales</label>
       <input type="text" data-field="notas" value="${data?.notas||''}" placeholder="Ej: carne + papas, box lunch, vegetariano…">
-    </div>`;
+    </div>
+    <div class="mix-split" style="display:none">
+      <div class="form-row" style="margin-top:10px">
+        <div class="form-group" style="margin-bottom:0"><label>Pax directo</label><input type="number" data-field="pax_directo" value="${data?.pax_directo||''}" placeholder="0" min="0" style="text-align:center" onchange="onMixChange(this)"></div>
+        <div class="form-group" style="margin-bottom:0"><label>Pax incluido</label><input type="number" data-field="pax_incluido" value="${data?.pax_incluido||''}" placeholder="0" min="0" style="text-align:center" onchange="onMixChange(this)"></div>
+      </div>
+    </div>
+    <div class="menus-section" style="display:none">
+      <div class="menus-section-label">Menús incluidos</div>
+      <div class="menus-list"></div>
+    </div>\`;
   document.getElementById('grupos-container').appendChild(div);
+  // Init sections if editing
+  if (data) {
+    const pagoSel = div.querySelector('[data-field="pago"]');
+    onPagoChange(pagoSel, data.menus || []);
+  }
 }
 
 function removeGrupo(idx) {
   const el = document.querySelector(`.grupo-form[data-gidx="${idx}"]`);
   if (el) el.remove();
+}
+
+
+function onPagoChange(sel, existingMenus) {
+  const grupoDiv = sel.closest('.grupo-form');
+  const pago = sel.value;
+  const mixSplit = grupoDiv.querySelector('.mix-split');
+  const menusSection = grupoDiv.querySelector('.menus-section');
+  mixSplit.style.display = pago === 'mix' ? 'block' : 'none';
+  menusSection.style.display = (pago === 'incluido' || pago === 'mix') ? 'block' : 'none';
+  if (pago === 'incluido') {
+    const pax = parseInt(grupoDiv.querySelector('[data-field="pax"]').value) || 0;
+    renderMenuList(grupoDiv, pax, existingMenus);
+  } else if (pago === 'mix') {
+    const paxInc = parseInt(grupoDiv.querySelector('[data-field="pax_incluido"]').value) || 0;
+    renderMenuList(grupoDiv, paxInc, existingMenus);
+  } else {
+    renderMenuList(grupoDiv, 0);
+  }
+}
+
+function onPaxChange(inp) {
+  const grupoDiv = inp.closest('.grupo-form');
+  const pago = grupoDiv.querySelector('[data-field="pago"]').value;
+  if (pago === 'incluido') {
+    renderMenuList(grupoDiv, parseInt(inp.value) || 0);
+  }
+}
+
+function onMixChange(inp) {
+  const grupoDiv = inp.closest('.grupo-form');
+  const paxInc = parseInt(grupoDiv.querySelector('[data-field="pax_incluido"]').value) || 0;
+  renderMenuList(grupoDiv, paxInc);
+}
+
+function renderMenuList(grupoDiv, count, existingMenus = []) {
+  const list = grupoDiv.querySelector('.menus-list');
+  const gidx = grupoDiv.dataset.gidx;
+  list.innerHTML = '';
+  if (count <= 0) return;
+  const dlId = 'menu-opts-' + gidx;
+  let dl = document.getElementById(dlId);
+  if (!dl) {
+    dl = document.createElement('datalist');
+    dl.id = dlId;
+    ['Menú del día', 'Vegetariano', 'Sin gluten', 'Niño', 'Box lunch'].forEach(o => {
+      const opt = document.createElement('option'); opt.value = o; dl.appendChild(opt);
+    });
+    document.body.appendChild(dl);
+  }
+  for (let i = 0; i < count; i++) {
+    const row = document.createElement('div');
+    row.className = 'menu-row';
+    row.innerHTML = `<span class="menu-pax-label">Pax ${i+1}</span><input type="text" class="menu-input" data-menu-idx="${i}" value="${existingMenus[i]||''}" placeholder="Menú (dejar en blanco si no definido)" list="${dlId}">`;
+    list.appendChild(row);
+  }
 }
 
 function guardarReserva() {
@@ -1059,7 +1131,12 @@ function guardarReserva() {
     const get = f => el.querySelector(`[data-field="${f}"]`).value.trim();
     const pax = parseInt(get('pax'));
     if (!pax || pax < 1) valido = false;
-    grupos.push({ guia:get('guia'), driver:get('driver'), pax:pax||0, pago:get('pago'), mesas:get('mesas'), notas:get('notas') });
+    const pago = get('pago');
+    const pax_directo = pago === 'mix' ? (parseInt(get('pax_directo'))||0) : (pago==='directo'?pax||0:0);
+    const pax_incluido = pago === 'mix' ? (parseInt(get('pax_incluido'))||0) : (pago==='incluido'?pax||0:0);
+    const menus = [];
+    el.querySelectorAll('.menu-input').forEach(inp => menus.push(inp.value.trim()));
+    grupos.push({ guia:get('guia'), driver:get('driver'), pax:pax||0, pago, pax_directo, pax_incluido, menus, mesas:get('mesas'), notas:get('notas') });
   });
   if (!valido) { toast('Todos los grupos deben tener al menos 1 pax.', 'error'); return; }
 
