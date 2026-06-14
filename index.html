@@ -390,6 +390,42 @@
   .btn-eliminar-dia { background: transparent; border: 1.5px solid #D0806A; color: #C05040; border-radius: 6px; padding: 6px 14px; font-size: 0.78rem; font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
   .btn-eliminar-dia:hover { background: #FCEAE0; }
 
+  /* LOCK */
+  .lock-btn {
+    display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 6px 14px;
+    color: #C8B89A; font-size: 0.78rem; font-family: 'Inter', sans-serif; cursor: pointer;
+    transition: all 0.18s; font-weight: 500;
+  }
+  .lock-btn:hover { background: rgba(255,255,255,0.13); }
+  .lock-btn.unlocked { border-color: var(--verde); color: #7DC896; }
+  .app-bloqueada .btn-primary,
+  .app-bloqueada #btn-historial,
+  .app-bloqueada .btn-ghost[onclick="confirmarLimpiar()"],
+  .app-bloqueada .card-actions,
+  .app-bloqueada .btn-estado-edit { display: none !important; }
+
+  /* PIN MODAL */
+  .pin-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(20,10,5,0.72);
+    z-index: 300; align-items: center; justify-content: center;
+  }
+  .pin-overlay.open { display: flex; animation: fadeIn 0.18s ease; }
+  .pin-box {
+    background: var(--blanco); border-radius: 14px; padding: 32px 28px;
+    width: 100%; max-width: 340px; box-shadow: 0 12px 48px rgba(0,0,0,0.35); text-align: center;
+  }
+  .pin-box h3 { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: var(--piedra); margin-bottom: 8px; }
+  .pin-box p { font-size: 0.82rem; color: #8A7060; margin-bottom: 20px; }
+  .pin-input {
+    width: 100%; padding: 12px; text-align: center; font-size: 1.5rem; letter-spacing: 0.4em;
+    border: 2px solid var(--arena-deep); border-radius: 8px; font-family: 'Inter', sans-serif;
+    color: var(--piedra); background: var(--arena); outline: none; margin-bottom: 16px;
+  }
+  .pin-input:focus { border-color: var(--terracota); }
+  .pin-actions { display: flex; gap: 10px; }
+  .pin-actions .btn { flex: 1; justify-content: center; }
+
   /* PRINT */
   @media print {
     header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -433,6 +469,10 @@
   <div>
     <div class="clock-time" id="clock-time">--:--</div>
     <div class="clock-date" id="clock-date">—</div>
+    <button class="lock-btn" id="lock-btn" onclick="toggleLock()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Bloqueado
+    </button>
   </div>
 </header>
 
@@ -549,6 +589,19 @@
   </div>
 </div>
 
+<!-- PIN MODAL -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <h3>Ingresar PIN</h3>
+    <p>Ingresa el PIN para habilitar la edición</p>
+    <input type="password" inputmode="numeric" maxlength="10" class="pin-input" id="pin-input" placeholder="••••" onkeydown="if(event.key==='Enter') verificarPin()">
+    <div class="pin-actions">
+      <button class="btn btn-ghost" onclick="cerrarPin()">Cancelar</button>
+      <button class="btn btn-primary" onclick="verificarPin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- HISTORIAL -->
 <div class="historial-overlay" id="historial-overlay">
   <div class="historial-panel">
@@ -630,6 +683,52 @@ function getOrdenadas() {
   if (ordenActual === 'hora')   lista.sort((a,b) => (a.hora||'99:99').localeCompare(b.hora||'99:99'));
   if (ordenActual === 'pax')    lista.sort((a,b) => paxTotal(b) - paxTotal(a));
   return lista;
+}
+
+const PIN_CORRECTO = '5200';
+let desbloqueado = false;
+
+function toggleLock() {
+  if (desbloqueado) {
+    desbloqueado = false;
+    aplicarBloqueo();
+    toast('App bloqueada.', 'info');
+  } else {
+    document.getElementById('pin-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('pin-input').focus(), 80);
+  }
+}
+
+function verificarPin() {
+  const val = document.getElementById('pin-input').value;
+  if (val === PIN_CORRECTO) {
+    desbloqueado = true;
+    cerrarPin();
+    aplicarBloqueo();
+    toast('Acceso concedido.', 'success');
+  } else {
+    toast('PIN incorrecto.', 'error');
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+  }
+}
+
+function cerrarPin() {
+  document.getElementById('pin-overlay').classList.remove('open');
+  document.getElementById('pin-input').value = '';
+}
+
+function aplicarBloqueo() {
+  const btn = document.getElementById('lock-btn');
+  if (desbloqueado) {
+    document.body.classList.remove('app-bloqueada');
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Desbloqueado';
+    btn.classList.add('unlocked');
+  } else {
+    document.body.classList.add('app-bloqueada');
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Bloqueado';
+    btn.classList.remove('unlocked');
+  }
 }
 
 function estadoLabel(e) {
@@ -1007,6 +1106,9 @@ document.addEventListener('keydown', e => {
 });
 
 cargarDatos();
+aplicarBloqueo();
+document.getElementById('pin-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) cerrarPin(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape' && document.getElementById('pin-overlay').classList.contains('open')) cerrarPin(); });
 </script>
 </body>
 </html>
