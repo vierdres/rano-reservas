@@ -4,26 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rano Café — Control de Reservas</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  // ── Capacity ──────────────────────────────────────────────────────────────
-  let temporadaAlta = false;
-  function toggleTemporada() {
-    temporadaAlta = !temporadaAlta;
-    document.getElementById('cap-toggle').textContent = temporadaAlta ? 'T. Alta' : 'T. Baja';
-    actualizarCapacidad();
-  }
-  function actualizarCapacidad() {
-    const max = temporadaAlta ? 162 : 144;
-    const totPax = reservas.reduce((s,r) => s + paxTotal(r), 0);
-    const pct = Math.min(100, Math.round((totPax / max) * 100));
-    document.getElementById('cap-pax').textContent = totPax;
-    document.getElementById('cap-max').textContent = max;
-    const fill = document.getElementById('cap-fill');
-    fill.style.width = pct + '%';
-    fill.className = 'capacity-fill' + (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : '');
-  }
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -1246,6 +1227,26 @@ cargarDatos();
 aplicarBloqueo();
 document.getElementById('pin-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) cerrarPin(); });
 document.addEventListener('keydown', e => { if(e.key==='Escape' && document.getElementById('pin-overlay').classList.contains('open')) cerrarPin(); });
+
+  // ── Capacity ──────────────────────────────────────────────────────────────
+  let temporadaAlta = false;
+  function toggleTemporada() {
+    temporadaAlta = !temporadaAlta;
+    document.getElementById('cap-toggle').textContent = temporadaAlta ? 'T. Alta' : 'T. Baja';
+    actualizarCapacidad();
+  }
+  function actualizarCapacidad() {
+    const max = temporadaAlta ? 162 : 144;
+    const totPax = reservas.reduce((s,r) => s + paxTotal(r), 0);
+    const pct = Math.min(100, Math.round((totPax / max) * 100));
+    document.getElementById('cap-pax').textContent = totPax;
+    document.getElementById('cap-max').textContent = max;
+    const fill = document.getElementById('cap-fill');
+    fill.style.width = pct + '%';
+    fill.className = 'capacity-fill' + (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : '');
+  }
+
+
 </script>
 </body>
 </html>
