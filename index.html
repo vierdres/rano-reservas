@@ -400,11 +400,10 @@
   .lock-btn:hover { filter: brightness(1.15); }
   .lock-btn { border-color: #E06060; color: #E06060; }
   .lock-btn.unlocked { border-color: #7DC896; color: #7DC896; }
-  .app-bloqueada .btn-primary,
+  .app-bloqueada main .btn-primary,
   .app-bloqueada #btn-historial,
-  .app-bloqueada .btn-ghost[onclick="confirmarLimpiar()"],
-  .app-bloqueada .card-actions,
-  .app-bloqueada .btn-estado-edit { display: none !important; }
+  .app-bloqueada .toolbar .btn-ghost[onclick="confirmarLimpiar()"],
+  .app-bloqueada .card-actions { display: none !important; }
 
   /* PIN MODAL */
   .pin-overlay {
@@ -472,7 +471,7 @@
     <div class="clock-date" id="clock-date">—</div>
     <button class="lock-btn" id="lock-btn" onclick="toggleLock()">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Bloqueado
+      <span> Bloqueado</span>
     </button>
   </div>
 </header>
@@ -723,11 +722,11 @@ function aplicarBloqueo() {
   const btn = document.getElementById('lock-btn');
   if (desbloqueado) {
     document.body.classList.remove('app-bloqueada');
-    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Desbloqueado';
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span> Desbloqueado</span>';
     btn.classList.add('unlocked');
   } else {
     document.body.classList.add('app-bloqueada');
-    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Bloqueado';
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span> Bloqueado</span>';
     btn.classList.remove('unlocked');
   }
 }
