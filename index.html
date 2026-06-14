@@ -943,18 +943,20 @@ async function cargarDatos() {
 }
 
 function activarRealtime() {
-  supabaseClient
-    .channel('cambios-estado')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'estado' }, payload => {
-      if (payload.new && payload.new.reservas) {
-        reservas = payload.new.reservas;
+  setInterval(async () => {
+    const { data: estado, error } = await supabaseClient.from('estado').select('reservas').eq('id', 1).single();
+    if (!error && estado?.reservas) {
+      const nuevas = JSON.stringify(estado.reservas);
+      const actuales = JSON.stringify(reservas);
+      if (nuevas !== actuales) {
+        reservas = estado.reservas;
         render();
       }
-    })
-    .subscribe();
+    }
+  }, 5000);
 }
 
-function guardarStorage() { supabaseClient.from('estado').upsert({ id: 1, reservas: reservas, updated_at: new Date().toISOString() }); }
+function guardarStorage() { supabaseClient.from('estado').upsert({ id: 1, reservas: reservas, updated_at: new Date().toISOString() }).then(({error}) => { if(error) console.error('Error guardando:', error); }); }
 
 function construirTexto() {
   const now = new Date();
