@@ -939,6 +939,19 @@ async function cargarDatos() {
   const { data: histData } = await supabaseClient.from('historial').select('*').order('created_at', { ascending: false });
   historial = (histData || []).map(h => ({ id: h.id, fechaLabel: h.fecha_label, hora: h.hora, totalPax: h.total_pax, totalReservas: h.total_reservas, reservas: h.reservas }));
   render();
+  activarRealtime();
+}
+
+function activarRealtime() {
+  supabaseClient
+    .channel('cambios-estado')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'estado' }, payload => {
+      if (payload.new && payload.new.reservas) {
+        reservas = payload.new.reservas;
+        render();
+      }
+    })
+    .subscribe();
 }
 
 function guardarStorage() { supabaseClient.from('estado').upsert({ id: 1, reservas: reservas, updated_at: new Date().toISOString() }); }
