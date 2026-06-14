@@ -397,8 +397,9 @@
     color: #C8B89A; font-size: 0.78rem; font-family: 'Inter', sans-serif; cursor: pointer;
     transition: all 0.18s; font-weight: 500;
   }
-  .lock-btn:hover { background: rgba(255,255,255,0.13); }
-  .lock-btn.unlocked { border-color: var(--verde); color: #7DC896; }
+  .lock-btn:hover { filter: brightness(1.15); }
+  .lock-btn { border-color: #E06060; color: #E06060; }
+  .lock-btn.unlocked { border-color: #7DC896; color: #7DC896; }
   .app-bloqueada .btn-primary,
   .app-bloqueada #btn-historial,
   .app-bloqueada .btn-ghost[onclick="confirmarLimpiar()"],
