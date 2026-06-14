@@ -4,7 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rano Café — Control de Reservas</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  // ── Capacity ──────────────────────────────────────────────────────────────
+  let temporadaAlta = false;
+  function toggleTemporada() {
+    temporadaAlta = !temporadaAlta;
+    document.getElementById('cap-toggle').textContent = temporadaAlta ? 'T. Alta' : 'T. Baja';
+    actualizarCapacidad();
+  }
+  function actualizarCapacidad() {
+    const max = temporadaAlta ? 162 : 144;
+    const totPax = reservas.reduce((s,r) => s + paxTotal(r), 0);
+    const pct = Math.min(100, Math.round((totPax / max) * 100));
+    document.getElementById('cap-pax').textContent = totPax;
+    document.getElementById('cap-max').textContent = max;
+    const fill = document.getElementById('cap-fill');
+    fill.style.width = pct + '%';
+    fill.className = 'capacity-fill' + (pct >= 90 ? ' full' : pct >= 70 ? ' warn' : '');
+  }
+
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -244,9 +263,17 @@
   .estado-btn.finalizado { background: rgba(74,124,89,0.18); color: #5AAA70; border: 1.5px solid #5AAA70; }
   .estado-btn:hover { filter: brightness(1.15); }
 
-  .reserva-card.pendiente  { border-left: 4px solid #E06060; }
-  .reserva-card.en_mesa   { border-left: 4px solid #C8A800; }
-  .reserva-card.finalizado { border-left: 4px solid #5AAA70; opacity: 0.75; }
+  .reserva-card.pendiente  { border-left: 4px solid #E06060; background: linear-gradient(135deg, var(--piedra) 60%, rgba(224,96,96,0.10) 100%); }
+  .reserva-card.en_mesa   { border-left: 4px solid #C8A800; background: linear-gradient(135deg, var(--piedra) 60%, rgba(200,168,0,0.10) 100%); }
+  .reserva-card.finalizado { border-left: 4px solid #5AAA70; background: linear-gradient(135deg, var(--piedra) 60%, rgba(90,170,112,0.12) 100%); opacity: 0.85; }
+
+  @keyframes statePulse {
+    0%   { transform: scale(1); box-shadow: 0 3px 14px rgba(61,43,31,0.2); }
+    35%  { transform: scale(1.035); box-shadow: 0 6px 22px rgba(61,43,31,0.32); }
+    70%  { transform: scale(0.995); }
+    100% { transform: scale(1); box-shadow: 0 3px 14px rgba(61,43,31,0.2); }
+  }
+  .reserva-card.state-changed { animation: statePulse 0.45s ease !important; }
 
   .notas-line { font-size: 0.73rem; color: #A89070; font-style: italic; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); }
 
@@ -482,6 +509,59 @@
     #toast-container { bottom: 16px; right: 12px; left: 12px; }
     .toast { min-width: auto; }
   }
+
+  /* CAPACITY BAR */
+  .capacity-bar-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .capacity-label {
+    font-size: 0.78rem;
+    color: #A89070;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .capacity-label strong {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--terracota);
+  }
+  .capacity-track {
+    flex: 1;
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .capacity-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.5s ease, background 0.4s ease;
+    background: #5AAA70;
+  }
+  .capacity-fill.warn  { background: #C8A800; }
+  .capacity-fill.full  { background: #E06060; }
+  .capacity-season-toggle {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 6px;
+    color: #A89070;
+    font-size: 0.7rem;
+    padding: 4px 9px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .capacity-season-toggle:hover { border-color: var(--terracota); color: var(--terracota); }
 </style>
 </head>
 <body>
@@ -552,6 +632,12 @@
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       Historial
     </button>
+  </div>
+
+  <div class="capacity-bar-wrap" id="capacity-bar-wrap">
+    <div class="capacity-label">Capacidad: <strong id="cap-pax">0</strong> / <span id="cap-max">144</span> pax</div>
+    <div class="capacity-track"><div class="capacity-fill" id="cap-fill" style="width:0%"></div></div>
+    <button class="capacity-season-toggle" id="cap-toggle" onclick="toggleTemporada()">T. Baja</button>
   </div>
 
   <div class="sort-bar" id="sort-bar" style="display:none">
@@ -790,6 +876,10 @@ function cambiarEstado(id) {
   res.estado = ciclo[res.estado || 'pendiente'];
   guardarStorage();
   render();
+  setTimeout(() => {
+    const el = document.querySelector(`.reserva-card[data-id="${id}"]`);
+    if (el) { el.classList.add('state-changed'); setTimeout(() => el.classList.remove('state-changed'), 500); }
+  }, 10);
 }
 
 function render() {
@@ -800,6 +890,7 @@ function render() {
   const totPax = reservas.reduce((s,r) => s + paxTotal(r), 0);
   document.getElementById('total-pax').textContent = totPax;
   const pmob = document.getElementById('total-pax-mobile'); if(pmob) pmob.textContent = totPax;
+  actualizarCapacidad();
   document.getElementById('total-reservas').textContent = reservas.length;
 
   grid.innerHTML = '';
